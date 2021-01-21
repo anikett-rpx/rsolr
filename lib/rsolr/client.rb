@@ -17,13 +17,15 @@ class RSolr::Client
     end
   end
 
-  attr_reader :uri, :proxy, :update_format, :options, :update_path
+  attr_reader :uri, :proxy, :update_format, :options, :update_path, :username, :password
 
   def initialize connection, options = {}
     @proxy = @uri = nil
     @connection = connection
     unless false === options[:url]
       @uri = extract_url_from_options(options)
+      @username = options[:user]
+      @password = options[:password]
       if options[:proxy]
         proxy_url = options[:proxy].dup
         proxy_url << "/" unless proxy_url.nil? or proxy_url[-1] == ?/
@@ -294,7 +296,7 @@ class RSolr::Client
       conn_opts[:request][:params_encoder] = Faraday::FlatParamsEncoder
 
       Faraday.new(conn_opts) do |conn|
-        conn.basic_auth(uri.user, uri.password) if uri.user && uri.password
+        conn.basic_auth(username, password) if username && password
         conn.response :raise_error
         conn.request :retry, max: options[:retry_after_limit], interval: 0.05,
                              interval_randomness: 0.5, backoff_factor: 2,
